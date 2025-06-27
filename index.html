@@ -3,25 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Assistente para Automação de E-mails com Google Apps Script</title>
+    <title>Automatizador de E-mails (Browser)</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
     <!-- Chosen Palette: Warm Neutrals -->
-    <!-- Application Structure Plan: A multi-step wizard SPA. This structure breaks down the complex process of creating and deploying a script into small, manageable chunks, which is ideal for a non-technical audience. Key interactions include a dynamic code generator based on user input via a form, and simple visual diagrams to illustrate UI actions. This guided, step-by-step flow prevents users from feeling overwhelmed and reduces the chance of errors, as they never have to edit code directly. Now includes handling for multiple recipients and multiple attachments based on user input. The AI content generation feature has been removed as requested. -->
-    <!-- Visualization & Content Choices: Report Info -> Tutorial Steps. Goal -> Guide a layperson through a technical process. Viz/Presentation -> Interactive wizard with form-based code generation and CSS diagrams. Interaction -> Next/Prev buttons, form inputs updating a code block, copy-to-clipboard button. Form inputs now support comma-separated values for multiple recipients and attachment IDs. Justification -> This is more user-friendly and error-proof than a static text document. The ability to add multiple recipients and attachments makes the tool much more versatile. Library/Method -> Vanilla JS for logic, Tailwind CSS for styling and diagrams. CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <!-- Application Structure Plan: A multi-step wizard SPA. This structure is chosen for laypersons to guide them through configuration. Key interactions include Google OAuth login, form-based input for email parameters (recipients, subject, body), attachment ID input, and a manual "send now" trigger. This structure prioritizes user simplicity and direct interaction with Google APIs from the browser. -->
+    <!-- Visualization & Content Choices: Report Info -> App steps and email configuration. Goal -> Enable users to configure and trigger email sending directly from the browser. Viz/Presentation -> Interactive wizard steps, form elements, a Google Sign-In button, and dynamic status updates. Interactive Elements -> Form inputs, buttons for navigation, Google login, and manual email sending. Justification -> This approach simplifies the user experience by removing Apps Script code interaction. The manual trigger and sessionStorage highlight the browser-based nature. Removed AI content generation feature as requested. Library/Method -> Vanilla JS for logic, Tailwind CSS for UI/UX, gapi.js for Google API integration. CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
         }
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&family=Fira+Code&display=swap');
-        .fira-code {
-            font-family: 'Fira Code', monospace;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap');
         .step-card {
             opacity: 0;
             transform: scale(0.95);
             pointer-events: none;
             position: absolute;
-            width: 100%; /* Ensure it takes full width when hidden */
+            width: 100%;
             top: 0;
             left: 0;
             transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
@@ -32,161 +30,110 @@
             position: relative;
             pointer-events: auto;
         }
-        .menu-item {
-            @apply bg-white border border-gray-200 rounded-md px-3 py-1.5 text-sm;
-        }
-        .menu-item-nested {
-            @apply bg-white border border-gray-200 rounded-md px-3 py-1.5 text-sm ml-4;
-        }
     </style>
 </head>
-<body class="bg-stone-50 text-slate-800 flex items-center justify-center min-h-screen p-4">
+<body class="bg-stone-500 text-slate-800 flex items-center justify-center min-h-screen p-4">
 
     <div class="w-full max-w-4xl mx-auto">
         <div class="bg-white rounded-xl shadow-2xl overflow-hidden">
             <div id="progress-bar-container" class="p-6 border-b border-stone-200">
-                 <h1 class="text-2xl font-bold text-center text-slate-800 mb-2">Automatize Seus E-mails</h1>
-                 <p id="step-title" class="text-center text-slate-500 mb-4">Passo 1 de 7: Boas-vindas</p>
+                 <h1 class="text-2xl font-bold text-center text-slate-800 mb-2">Automatizador de E-mails (Browser)</h1>
+                 <p id="step-title" class="text-center text-slate-500 mb-4">Passo 1 de 5: Boas-vindas</p>
                 <div class="bg-stone-200 rounded-full h-2.5">
-                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 14%; transition: width 0.5s ease-in-out;"></div>
+                    <div id="progress-bar" class="bg-blue-600 h-2.5 rounded-full" style="width: 20%; transition: width 0.5s ease-in-out;"></div>
                 </div>
             </div>
 
             <div class="relative p-6 sm:p-10">
                 <!-- Step 1: Welcome -->
                 <div id="step-1" class="step-card visible-step">
-                    <h2 class="text-3xl font-bold mb-4">Bem-vindo ao seu assistente de automação!</h2>
-                    <p class="text-lg text-slate-600 mb-4">Vamos criar um "robô" que envia e-mails para você, todos os dias, de forma automática. Não precisa saber programar, é só seguir os passos!</p>
+                    <h2 class="text-3xl font-bold mb-4">Bem-vindo ao seu automatizador de e-mails!</h2>
+                    <p class="text-lg text-slate-600 mb-4">Este aplicativo permite que você configure e envie e-mails diretamente do seu navegador, sem a necessidade de código ou Google Apps Script.</p>
                     <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
-                        <h3 class="font-bold text-blue-800">O que vamos fazer?</h3>
+                        <h3 class="font-bold text-blue-800">O que podemos fazer?</h3>
                         <ul class="list-disc list-inside mt-2 text-blue-700">
-                            <li>Criar vários rascunhos de e-mail de uma só vez.</li>
-                            <li>Agendar o envio automático de um rascunho por dia.</li>
+                            <li>Enviar e-mails para múltiplos destinatários.</li>
+                            <li>Anexar múltiplos arquivos do seu Google Drive.</li>
+                            <li>Tudo isso com uma interface simples!</li>
                         </ul>
                     </div>
                 </div>
 
-                <!-- Step 2: Open Apps Script -->
+                <!-- Step 2: Google Login -->
                 <div id="step-2" class="step-card hidden-step">
-                    <h2 class="text-3xl font-bold mb-4">Acesse o editor de Scripts</h2>
-                    <p class="text-lg text-slate-600 mb-6">Primeiro, precisamos abrir a ferramenta onde a mágica acontece. Você pode fazer isso a partir de qualquer documento Google.</p>
-                    <div class="bg-stone-100 p-6 rounded-lg shadow-inner">
-                        <p class="font-semibold mb-2">1. Abra um documento, como o Google Planilhas.</p>
-                        <p class="font-semibold mb-4">2. No menu superior, siga este caminho:</p>
-                        <div class="flex flex-col items-start space-y-2 mb-4">
-                             <div class="menu-item shadow-md">Extensões</div>
-                             <span class="text-gray-400 font-bold ml-4">&darr;</span>
-                             <div class="menu-item-nested shadow-md">Apps Script</div>
-                        </div>
-                         <p class="mt-4 text-sm text-slate-500">Isso abrirá o editor de scripts em uma nova aba do seu navegador.</p>
+                    <h2 class="text-3xl font-bold mb-4">Conecte sua Conta Google</h2>
+                    <p class="text-lg text-slate-600 mb-6">Para que o aplicativo possa enviar e-mails e acessar seus arquivos do Google Drive, você precisa autorizá-lo com sua conta Google.</p>
+                    <div class="flex justify-center items-center h-48 bg-stone-100 rounded-lg shadow-inner">
+                        <button id="authorize_button" class="bg-blue-600 text-white font-bold py-3 px-6 rounded-md hover:bg-blue-700 transition duration-300 flex items-center justify-center text-lg">
+                            <svg class="w-6 h-6 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor"><path d="M488 261.8C488 408.8 379.2 512 256 512c-69.6 0-136.3-31.5-179.9-86.4L105.5 352h-95v96h-16v-96h-16v-16h16v-96h16v16h95.9C159.7 448.5 208.4 480 256 480c103.5 0 188.7-88.7 188.7-188.7S359.5 102.7 256 102.7c-47.6 0-94.3 20.2-127.3 54.7l-7.5-6.8-67-67c37-33.8 86.8-54.7 139.8-54.7C379.2 32 488 141.2 488 261.8z"/></svg>
+                            Conectar com Google
+                        </button>
+                        <p id="auth_status" class="hidden text-green-700 font-semibold">Conectado!</p>
                     </div>
+                    <p class="text-sm text-slate-500 mt-4 text-center">Será aberta uma janela para você fazer login e dar as permissões necessárias. É seguro, pois você está se conectando diretamente aos serviços do Google.</p>
                 </div>
 
-                <!-- Step 3: Configure Code -->
+                <!-- Step 3: Configure Email -->
                 <div id="step-3" class="step-card hidden-step">
-                    <h2 class="text-3xl font-bold mb-4">Personalize o seu robô</h2>
-                    <p class="text-lg text-slate-600 mb-6">Preencha os campos abaixo para gerar seu código personalizado. O robô usará estas informações para criar e enviar seus e-mails.</p>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div class="space-y-4">
-                            <div>
-                                <label for="recipient" class="font-semibold text-slate-700">E-mail(s) do(s) Destinatário(s) (separar por vírgula)</label>
-                                <input type="text" id="recipient" placeholder="paraquem@email.com, outro@email.com" class="w-full mt-1 p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
-                            </div>
-                            <div>
-                                <label for="subject" class="font-semibold text-slate-700">Início do Assunto do E-mail</label>
-                                <input type="text" id="subject" value="Notícia Diária - " class="w-full mt-1 p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
-                            </div>
-                            <div>
-                                <label for="body" class="font-semibold text-slate-700">Conteúdo do E-mail</label>
-                                <textarea id="body" rows="4" class="w-full mt-1 p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
-                            </div>
-                             <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <label for="drafts_to_create" class="font-semibold text-slate-700">Rascunhos a criar</label>
-                                    <input type="number" id="drafts_to_create" value="7" min="1" class="w-full mt-1 p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
-                                </div>
-                                <div>
-                                    <label for="drafts_to_send" class="font-semibold text-slate-700">Envios por dia</label>
-                                    <input type="number" id="drafts_to_send" value="1" min="1" class="w-full mt-1 p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
-                                </div>
-                            </div>
-                            <div>
-                                <label for="attachment_ids" class="font-semibold text-slate-700">IDs dos Anexos do Drive (Opcional, separar por vírgula)</label>
-                                <textarea id="attachment_ids" rows="2" placeholder="ID1, ID2, ID3" class="w-full mt-1 p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
-                            </div>
+                    <h2 class="text-3xl font-bold mb-4">Configurar Automação de E-mails</h2>
+                    <p class="text-lg text-slate-600 mb-6">Preencha os detalhes do e-mail que você deseja automatizar.</p>
+                    <div class="space-y-4">
+                        <div>
+                            <label for="recipient" class="font-semibold text-slate-700">E-mail(s) do(s) Destinatário(s) <br><span class="font-normal text-sm text-slate-500">(separar por vírgula, ex: email1@ex.com, email2@ex.com)</span></label>
+                            <input type="text" id="recipient" placeholder="paraquem@email.com" class="w-full mt-1 p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
                         </div>
-                        <div class="bg-slate-900 rounded-lg p-4 h-full flex flex-col">
-                            <pre class="fira-code text-slate-300 text-xs whitespace-pre-wrap overflow-x-auto flex-grow"><code id="code-output"></code></pre>
-                             <button id="copy-button" class="mt-4 w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300 flex items-center justify-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard mr-2" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/></svg>
-                                <span id="copy-text">Copiar Código</span>
-                            </button>
+                        <div>
+                            <label for="subject" class="font-semibold text-slate-700">Assunto do E-mail</label>
+                            <input type="text" id="subject" value="Relatório Diário" class="w-full mt-1 p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label for="body" class="font-semibold text-slate-700">Conteúdo do E-mail</label>
+                            <textarea id="body" rows="6" class="w-full mt-1 p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">Olá! Este é o seu relatório diário. Tenha um ótimo dia!</textarea>
+                            </div>
+                        <div>
+                            <label for="attachment_ids" class="font-semibold text-slate-700">IDs dos Anexos do Google Drive <br><span class="font-normal text-sm text-slate-500">(Opcional, separar por vírgula, ex: ID1,ID2)</span></label>
+                            <textarea id="attachment_ids" rows="2" placeholder="ID do arquivo do Google Drive" class="w-full mt-1 p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                            <p class="text-xs text-slate-500 mt-1">Para obter o ID, abra o arquivo no Google Drive e copie a parte da URL entre "/d/" e "/view".</p>
                         </div>
                     </div>
-                    <p class="text-sm text-slate-500 mt-4">Depois de copiar, apague o código de exemplo no editor do Apps Script e cole este no lugar.</p>
                 </div>
 
-                <!-- Step 4: Run createEmailDrafts -->
+                <!-- Step 4: Send Drafts Manually -->
                 <div id="step-4" class="step-card hidden-step">
-                    <h2 class="text-3xl font-bold mb-4">Crie os primeiros rascunhos</h2>
-                    <p class="text-lg text-slate-600 mb-6">Agora vamos executar o script uma vez para que ele crie os e-mails na sua pasta de rascunhos.</p>
-                     <div class="bg-stone-100 p-6 rounded-lg shadow-inner">
-                        <p class="font-semibold mb-2">1. No topo do editor, selecione a função <span class="fira-code bg-stone-200 px-1 rounded">createEmailDrafts</span>.</p>
-                        <p class="font-semibold mb-4">2. Clique no botão <span class="font-bold">Executar ▶️</span>.</p>
-                        <div class="bg-white p-4 rounded-lg border border-stone-200 mt-4">
-                             <h3 class="font-bold text-red-700 mb-2">Aviso de permissão!</h3>
-                             <p class="text-slate-600">Na primeira vez, o Google pedirá sua autorização. É um passo normal e seguro. Clique em "Revisar permissões" e depois em "Permitir".</p>
+                    <h2 class="text-3xl font-bold mb-4">Gerar e Enviar Rascunhos</h2>
+                    <p class="text-lg text-slate-600 mb-6">Com as configurações prontas, você pode gerar rascunhos e enviá-los manualmente. Lembre-se, este app não envia e-mails automaticamente em segundo plano quando a aba é fechada.</p>
+                    <div class="bg-stone-100 p-6 rounded-lg shadow-inner text-center">
+                        <div class="mb-6">
+                            <label for="num_drafts_to_create_send" class="font-semibold text-slate-700 block mb-2">Quantos rascunhos quer criar/enviar AGORA?</label>
+                            <input type="number" id="num_drafts_to_create_send" value="1" min="1" class="w-24 p-2 border border-stone-300 rounded-md text-center focus:ring-2 focus:ring-blue-500 outline-none">
                         </div>
-                        <p class="mt-4 text-sm text-slate-500">Depois disso, verifique a pasta "Rascunhos" do seu Gmail. Os novos e-mails devem estar lá!</p>
+                        <button id="create_and_send_button" class="bg-blue-600 text-white font-bold py-3 px-8 rounded-md hover:bg-blue-700 transition duration-300 flex items-center justify-center mx-auto disabled:opacity-50 disabled:cursor-not-allowed">
+                            <span id="send-spinner" class="hidden animate-spin h-5 w-5 border-4 border-white border-t-transparent rounded-full mr-2"></span>
+                            Criar e Enviar Agora
+                        </button>
+                        <p id="send_status" class="mt-4 text-lg font-semibold text-slate-700"></p>
+                    </div>
+                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg mt-6">
+                        <h3 class="font-bold text-yellow-800">Atenção!</h3>
+                        <p class="text-yellow-700">Este aplicativo é executado no seu navegador. Ele **não fará envios diários automáticos se a aba ou o navegador for fechado**. A funcionalidade "diária" no Apps Script é substituída por um envio manual aqui.</p>
                     </div>
                 </div>
 
-                <!-- Step 5: Set Trigger -->
+                <!-- Step 5: Done -->
                 <div id="step-5" class="step-card hidden-step">
-                    <h2 class="text-3xl font-bold mb-4">Agende o envio automático</h2>
-                    <p class="text-lg text-slate-600 mb-6">Vamos configurar o robô para rodar sozinho todos os dias.</p>
-                     <div class="bg-stone-100 p-6 rounded-lg shadow-inner">
-                        <p class="font-semibold mb-2">1. No menu à esquerda, clique no ícone de Relógio ⏰ (Gatilhos).</p>
-                        <p class="font-semibold mb-4">2. Clique no botão <span class="bg-blue-600 text-white font-bold py-1 px-3 rounded-md">+ Adicionar Gatilho</span>.</p>
-                        <p class="font-semibold mb-2 mt-4">3. Configure o gatilho da seguinte forma:</p>
-                        <ul class="list-disc list-inside space-y-2 mt-2 text-slate-700 pl-4">
-                            <li>Função a executar: <span class="fira-code bg-stone-200 px-1 rounded">sendDailyDrafts</span></li>
-                            <li>Origem do evento: <span class="font-semibold">Baseado no tempo</span></li>
-                            <li>Tipo de gatilho: <span class="font-semibold">Gatilhos de tempo diário</span></li>
-                            <li>Intervalo de horas: Escolha o melhor horário para você (ex: <span class="font-semibold">entre 8 e 9 horas da manhã</span>)</li>
-                        </ul>
-                         <p class="mt-4 text-sm text-slate-500">Ao final, clique em "Salvar".</p>
-                    </div>
-                </div>
-                
-                 <!-- Step 6: Deploy -->
-                <div id="step-6" class="step-card hidden-step">
-                    <h2 class="text-3xl font-bold mb-4">Publique o seu script</h2>
-                    <p class="text-lg text-slate-600 mb-6">Este passo final "salva" uma versão oficial do seu código para que o gatilho funcione corretamente.</p>
-                     <div class="bg-stone-100 p-6 rounded-lg shadow-inner">
-                        <p class="font-semibold mb-2">1. No canto superior direito do editor, clique no botão azul <span class="font-bold">Implantar</span>.</p>
-                        <p class="font-semibold mb-4">2. Selecione <span class="font-bold">Nova implantação</span>.</p>
-                        <div class="bg-white p-4 rounded-lg border border-stone-200">
-                             <h3 class="font-bold text-slate-700 mb-2">Descrição</h3>
-                             <p class="text-slate-600">Dê um nome para sua implantação, como "Versão 1 - Envio diário".</p>
-                        </div>
-                        <p class="mt-4 text-sm text-slate-500">Depois, é só clicar em "Implantar" e está tudo pronto!</p>
-                    </div>
-                </div>
-
-                <!-- Step 7: Done -->
-                <div id="step-7" class="step-card hidden-step">
-                    <h2 class="text-3xl font-bold text-green-600 mb-4">Tudo pronto! 🚀</h2>
-                    <p class="text-lg text-slate-600 mb-6">Parabéns! Seu robô de automação de e-mails está configurado e pronto para trabalhar por você.</p>
-                    <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-r-lg">
-                        <h3 class="font-bold text-yellow-800">Dicas Finais</h3>
-                        <ul class="list-disc list-inside mt-2 text-yellow-700 space-y-1">
-                           <li>Se os rascunhos acabarem, basta executar o Passo 4 (<span class="fira-code text-sm">createEmailDrafts</span>) novamente.</li>
-                           <li>Você pode ver um histórico de execuções na aba "Execuções" (ícone de folha de papel) no menu esquerdo do Apps Script.</li>
+                    <h2 class="text-3xl font-bold text-green-600 mb-4">Tudo pronto! 🎉</h2>
+                    <p class="text-lg text-slate-600 mb-6">Seus e-mails foram processados. Lembre-se das limitações do envio via navegador.</p>
+                    <div class="bg-stone-100 p-6 rounded-lg shadow-inner">
+                        <p class="font-semibold mb-2">Para enviar mais e-mails:</p>
+                        <ul class="list-disc list-inside mt-2 text-slate-700">
+                           <li>Basta voltar ao Passo 4 e clicar em "Criar e Enviar Agora" novamente.</li>
+                           <li>Suas configurações são salvas automaticamente enquanto a aba está aberta.</li>
                         </ul>
                     </div>
+                    <button id="reset_app_button" class="mt-6 bg-red-600 text-white font-bold py-2 px-6 rounded-md hover:bg-red-700 transition duration-300 mx-auto block">
+                        Recomeçar
+                    </button>
                 </div>
-
             </div>
             
             <div id="navigation-buttons" class="p-6 border-t border-stone-200 flex justify-between items-center">
@@ -196,165 +143,183 @@
         </div>
     </div>
 
-<div id="generate-body-modal" class="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center p-4 z-50 hidden">
-    <div class="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-        <h3 class="text-2xl font-bold mb-4 text-slate-800">Gerar Conteúdo do E-mail ✨</h3>
-        <div class="mb-4">
-            <label for="prompt-theme" class="block font-semibold text-slate-700 mb-1">Tema do E-mail:</label>
-            <input type="text" id="prompt-theme" placeholder="Ex: Notícias recentes sobre tecnologia" class="w-full p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
-        <div class="mb-6">
-            <label for="prompt-tone" class="block font-semibold text-slate-700 mb-1">Tom do E-mail:</label>
-            <input type="text" id="prompt-tone" placeholder="Ex: Formal, Amigável, Persuasivo" class="w-full p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none">
-        </div>
-        <div class="flex justify-end space-x-4">
-            <button id="cancel-generate-button" class="bg-stone-300 text-slate-700 font-bold py-2 px-4 rounded-md hover:bg-stone-400 transition duration-300">Cancelar</button>
-            <button id="confirm-generate-button" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-md hover:bg-blue-700 transition duration-300 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed">
-                 <span id="generate-spinner" class="hidden animate-spin h-5 w-5 border-4 border-white border-t-transparent rounded-full mr-2"></span>
-                Gerar
-            </button>
-        </div>
-    </div>
-</div>
-
 
 <script>
+    // IMPORTANTE: SUBSTITUA 'SEU_CLIENT_ID_AQUI' pelo seu ID de Cliente real do Google Cloud.
+    // Você o obtém em Google Cloud Console > APIs e Serviços > Credenciais.
+    // Certifique-se também de que as "URIs de JavaScript autorizadas" na configuração do CLIENT_ID
+    // incluem o endereço de onde você está a executar este arquivo HTML (ex: http://localhost:8000 ou https://canvas.google.com).
+    const CLIENT_ID = '435236677809-ndh53a8ounc6a7e29gjaki2ki16c192o.apps.googleusercontent.com'; 
+    
+    // A API_KEY é menos comum para este tipo de autenticação (OAuth), mas pode ser necessária para algumas APIs.
+    // No ambiente Canvas, ela pode ser injetada automaticamente. Fora, você pode obtê-la no Google Cloud Console.
+    const API_KEY = ''; // Deixei vazia, esperando que o Canvas a injete ou que você a adicione se estiver fora do Canvas.
+
+    const DISCOVERY_DOCS = ["https://www.googleapis.com/discovery/v1/apis/gmail/v1/rest", "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest"];
+    const SCOPES = 'https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/drive.readonly';
+
     const steps = [
-        { id: 1, title: "Passo 1 de 7: Boas-vindas" },
-        { id: 2, title: "Passo 2 de 7: Abrir Editor" },
-        { id: 3, title: "Passo 3 de 7: Personalizar Código" },
-        { id: 4, title: "Passo 4 de 7: Criar Rascunhos" },
-        { id: 5, title: "Passo 5 de 7: Agendar Envio" },
-        { id: 6, title: "Passo 6 de 7: Publicar Script" },
-        { id: 7, title: "Passo 7 de 7: Concluído!" },
+        { id: 1, title: "Passo 1 de 5: Boas-vindas" },
+        { id: 2, title: "Passo 2 de 5: Conecte-se com o Google" },
+        { id: 3, title: "Passo 3 de 5: Configurar Automação" },
+        { id: 4, title: "Passo 4 de 5: Gerar e Enviar" },
+        { id: 5, title: "Passo 5 de 5: Concluído!" },
     ];
     let currentStep = 0;
+    let auth2; // GoogleAuth object
 
     const prevButton = document.getElementById('prev-button');
     const nextButton = document.getElementById('next-button');
     const progressBar = document.getElementById('progress-bar');
     const stepTitle = document.getElementById('step-title');
 
+    const authorizeButton = document.getElementById('authorize_button');
+    const authStatus = document.getElementById('auth_status');
     const recipientInput = document.getElementById('recipient');
     const subjectInput = document.getElementById('subject');
     const bodyInput = document.getElementById('body');
-    const draftsToCreateInput = document.getElementById('drafts_to_create');
-    const draftsToSendInput = document.getElementById('drafts_to_send');
-    const attachmentIdsInput = document.getElementById('attachment_ids'); // Changed ID to plural
-    const codeOutput = document.getElementById('code-output');
-    const copyButton = document.getElementById('copy-button');
-    const copyText = document.getElementById('copy-text');
-
-    // LLM related elements
-    const generateBodyButton = document.getElementById('generate-body-button');
-    const generateBodyModal = document.getElementById('generate-body-modal');
-    const promptThemeInput = document.getElementById('prompt-theme');
-    const promptToneInput = document.getElementById('prompt-tone');
-    const cancelGenerateButton = document.getElementById('cancel-generate-button');
-    const confirmGenerateButton = document.getElementById('confirm-generate-button');
-    const generateSpinner = document.getElementById('generate-spinner');
+    const attachmentIdsInput = document.getElementById('attachment_ids');
+    const numDraftsToCreateSendInput = document.getElementById('num_drafts_to_create_send');
+    const createAndSendButton = document.getElementById('create_and_send_button');
+    const sendStatus = document.getElementById('send_status');
+    const resetAppButton = document.getElementById('reset_app_button');
 
 
-    function updateCode() {
-        const recipient = recipientInput.value || 'seu.email.aqui@example.com';
-        const subject = subjectInput.value || 'Notícia Diária - ';
-        const body = bodyInput.value.replace(/`/g, '\\`') || 'Olá! Esta é a sua notícia diária.'; 
-        const draftsToCreate = draftsToCreateInput.value || 7;
-        const draftsToSend = draftsToSendInput.value || 1;
-        const attachmentIds = attachmentIdsInput.value || ''; // Get multiple IDs as string
-
-        const code = `
-// --- CONFIGURAÇÕES GERADAS ---
-const RECIPIENT_EMAIL = "${recipient}"; // Pode ser um ou vários e-mails separados por vírgula
-const SUBJECT_PREFIX = "${subject}";
-const BODY_CONTENT = \`${body}\`; // Conteúdo do e-mail (pode ser gerado por IA)
-const NUMBER_OF_DRAFTS_TO_CREATE = ${draftsToCreate};
-const DRAFTS_PER_DAY_TO_SEND = ${draftsToSend};
-// Se houver múltiplos IDs, separe-os por vírgula (Ex: "ID1,ID2,ID3")
-const ATTACHMENT_FILE_IDS = "${attachmentIds}"; 
-// --- FIM DAS CONFIGURAÇÕES ---
-
-/**
- * Função para criar os rascunhos de e-mail.
- * Você deve rodar esta função MANUALMENTE a primeira vez
- * e sempre que precisar de mais rascunhos.
- */
-function createEmailDrafts() {
-  let attachments = [];
-  if (ATTACHMENT_FILE_IDS) { // Verifica se há IDs fornecidos
-    const attachmentIdArray = ATTACHMENT_FILE_IDS.split(',').map(id => id.trim()).filter(id => id); // Divide e limpa
-    for (const id of attachmentIdArray) {
-      try {
-        const file = DriveApp.getFileById(id);
-        attachments.push(file.getBlob().setName(file.getName())); // Adiciona o blob com o nome original
-        Logger.log(\`Anexo '\${file.getName()}' (ID: \${id}) encontrado no Drive.\`);
-      } catch (e) {
-        Logger.log(\`Erro ao buscar anexo com ID '\${id}': \${e.message}.\`);
-      }
-    }
-    if (attachments.length === 0 && attachmentIdArray.length > 0) {
-        Logger.log("Nenhum anexo válido foi encontrado para os IDs fornecidos.");
-    }
-  }
-
-  for (let i = 0; i < NUMBER_OF_DRAFTS_TO_CREATE; i++) {
-    const subject = SUBJECT_PREFIX + (i + 1); // Ex: "Notícia Diária - 1"
-    const options = {};
-    if (attachments.length > 0) {
-      options.attachments = attachments;
-    }
-    // GmailApp.createDraft aceita múltiplos destinatários como uma string separada por vírgula
-    GmailApp.createDraft(RECIPIENT_EMAIL, subject, BODY_CONTENT, options);
-    Logger.log(\`Rascunho \${i + 1} criado com sucesso. Assunto: "\${subject}".\`);
-  }
-  Logger.log(\`Total de \${NUMBER_OF_DRAFTS_TO_CREATE} rascunhos criados.\`);
-}
-
-/**
- * Função para enviar os rascunhos de e-mail diariamente.
- * Esta função será executada AUTOMATICAMENTE por um agendamento (gatilho).
- */
-function sendDailyDrafts() {
-  const drafts = GmailApp.getDrafts(); // Pega todos os rascunhos
-  let sentCount = 0;
-
-  if (drafts.length === 0) {
-    Logger.log("Não há rascunhos para enviar hoje.");
-    // Opcional: Descomente para enviar um alerta por e-mail quando não houver mais rascunhos
-    // GmailApp.sendEmail(RECIPIENT_EMAIL, "Alerta: Sem Rascunhos Para Enviar", "Seu script não encontrou rascunhos para enviar.");
-    return;
-  }
-
-  // Envia a quantidade de rascunhos definida por DRAFTS_PER_DAY_TO_SEND
-  for (let i = 0; i < Math.min(DRAFTS_PER_DAY_TO_SEND, drafts.length); i++) {
-    const draft = drafts[i];
-    // Para pegar o assunto e destinatário, precisamos do "corpo" da mensagem do rascunho
-    const subject = draft.getMessage().getSubject();
-    const recipient = draft.getMessage().getTo(); // Pega o(s) destinatário(s) que já estava(m) no rascunho
-
-    draft.send(); // Envia o rascunho!
-    sentCount++;
-    Logger.log(\`Rascunho com assunto "\${subject}" enviado para \${recipient}.\`);
-  }
-  Logger.log(\`Total de \${sentCount} rascunhos enviados hoje.\`);
-
-  if (drafts.length <= DRAFTS_PER_DAY_TO_SEND) {
-    Logger.log("Todos os rascunhos restantes foram enviados. Considere criar mais ou desativar o agendamento.");
-  }
-}
-`;
-        codeOutput.textContent = code.trim();
+    // Helper to base64url encode a string
+    function base64urlEncode(str) {
+        return btoa(unescape(encodeURIComponent(str))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
     }
 
+    // Helper to construct MIME email for Gmail API
+    function createEmail(to, subject, message, attachments) {
+        let str = [
+            'Content-Type: multipart/mixed; boundary="foo_bar_baz"\r\n',
+            'MIME-Version: 1.0\r\n',
+            `To: ${to}\r\n`,
+            `Subject: =?utf-8?B?${base64urlEncode(subject)}?=\r\n`,
+            '\r\n',
+            '--foo_bar_baz\r\n',
+            'Content-Type: text/plain; charset="UTF-8"\r\n',
+            'MIME-Version: 1.0\r\n',
+            'Content-Transfer-Encoding: 7bit\r\n',
+            '\r\n',
+            `${message}\r\n`,
+            '\r\n'
+        ].join('');
+
+        attachments.forEach(attachment => {
+            str += `--foo_bar_baz\r\n`;
+            str += `Content-Type: ${attachment.mimeType}\r\n`;
+            str += `MIME-Version: 1.0\r\n`;
+            str += `Content-Transfer-Encoding: base64\r\n`;
+            str += `Content-Disposition: attachment; filename="${attachment.filename}"\r\n`;
+            str += '\r\n';
+            str += `${attachment.data}\r\n`;
+            str += '\r\n';
+        });
+
+        str += '--foo_bar_baz--';
+        return str;
+    }
+
+    // Google API Initialization
+    function handleClientLoad() {
+        gapi.load('client:auth2', initClient);
+    }
+
+    async function initClient() {
+        console.log("Iniciando gapi.client.init...");
+        try {
+            const initConfig = {
+                clientId: CLIENT_ID,
+                discoveryDocs: DISCOVERY_DOCS,
+                scope: SCOPES
+            };
+            // Conditionally add apiKey if it's provided and not empty
+            if (API_KEY) {
+                initConfig.apiKey = API_KEY;
+            }
+
+            await gapi.client.init(initConfig);
+            console.log("gapi.client.init concluído.");
+            auth2 = gapi.auth2.getAuthInstance();
+            auth2.isSignedIn.listen(updateSigninStatus);
+            updateSigninStatus(auth2.isSignedIn.get());
+        } catch (error) {
+            console.error("Erro ao inicializar gapi.client:", error);
+            let errorMessage = "Erro ao carregar a API do Google. ";
+            if (error.details && error.details.includes("idpiframe_initialization_failed")) {
+                errorMessage += "Isso geralmente indica que o CLIENT_ID ou as URIs de JavaScript autorizadas estão incorretos no Google Cloud Console. Por favor, verifique-os cuidadosamente.";
+            } else if (error.result && error.result.error && error.result.error.message && error.result.error.message.includes("API discovery response missing required fields")) {
+                 errorMessage += "A resposta de descoberta da API está faltando campos obrigatórios. Isso pode significar que as APIs do Gmail e/ou Google Drive não estão ativadas para o seu projeto no Google Cloud Console. Por favor, ative-as.";
+            } else if (error.message && error.message.includes("Invalid cookiePolicy")) {
+                 errorMessage += "Política de cookies inválida. Certifique-se de que as URIs de JavaScript autorizadas no Google Cloud Console correspondem exatamente ao domínio onde o app está a ser executado e que cookies de terceiros não estão bloqueados no seu navegador.";
+            }
+            else {
+                errorMessage += "Verifique o console do navegador para detalhes e certifique-se de que o CLIENT_ID e as URIs autorizadas estão corretos no Google Cloud Console.";
+            }
+            alert(errorMessage);
+        }
+    }
+
+    function updateSigninStatus(isSignedIn) {
+        if (isSignedIn) {
+            authorizeButton.classList.add('hidden');
+            authStatus.classList.remove('hidden');
+            if (currentStep === 1) { 
+                nextButton.disabled = false;
+            }
+        } else {
+            authorizeButton.classList.remove('hidden');
+            authStatus.classList.add('hidden');
+            if (currentStep === 1) { 
+                nextButton.disabled = true;
+            }
+        }
+    }
+
+    async function handleAuthClick() {
+        console.log("Botão 'Conectar com Google' clicado.");
+        if (auth2 && auth2.isSignedIn.get()) { // Adicionada verificação para auth2 não ser undefined
+            console.log("Já está conectado.");
+        } else {
+            try {
+                // Verifique se auth2 foi inicializado antes de chamar signIn
+                if (!auth2) {
+                    console.error("auth2 não foi inicializado. Tentando inicializar novamente.");
+                    await initClient(); // Tenta inicializar novamente
+                    if (!auth2) { // Se ainda for undefined, não podemos continuar
+                        alert("Não foi possível inicializar o serviço de autenticação do Google. Verifique o console para detalhes.");
+                        return;
+                    }
+                }
+                await auth2.signIn();
+                console.log("Login iniciado.");
+            } catch (error) {
+                console.error("Erro de autenticação ao tentar fazer login:", error);
+                if (error.details && error.details.includes("popup_closed_by_user")) {
+                     alert("A janela pop-up de login foi fechada. Por favor, tente novamente e não feche a janela.");
+                } else if (error.error === "idpiframe_initialization_failed") {
+                    alert("Erro de inicialização do login. Verifique se o CLIENT_ID e as URIs de JavaScript autorizadas estão corretos no Google Cloud Console.");
+                } else {
+                     alert("Falha na autenticação. Verifique o console do navegador para mais detalhes e suas permissões.");
+                }
+            }
+        }
+    }
+
+    // App Logic and UI Control
     function showStep(index) {
         steps.forEach((step, i) => {
             const stepElement = document.getElementById(`step-${step.id}`);
-            if (i === index) {
-                stepElement.classList.remove('hidden-step');
-                stepElement.classList.add('visible-step');
-            } else {
-                stepElement.classList.add('hidden-step');
-                stepElement.classList.remove('visible-step');
+            if (stepElement) { 
+                if (i === index) {
+                    stepElement.classList.remove('hidden-step');
+                    stepElement.classList.add('visible-step');
+                } else {
+                    stepElement.classList.add('hidden-step');
+                    stepElement.classList.remove('visible-step');
+                }
             }
         });
 
@@ -365,16 +330,148 @@ function sendDailyDrafts() {
         prevButton.disabled = index === 0;
         
         if(index === steps.length - 1) {
-            nextButton.textContent = 'Recomeçar';
+            nextButton.textContent = 'Voltar ao Início';
         } else {
             nextButton.textContent = 'Próximo';
         }
 
-        if (index === 2) { // When on the code configuration step
-            updateCode();
+        if (index === 1) { // Google Login step
+            if (auth2 && auth2.isSignedIn.get()) { // Verificação para auth2
+                nextButton.disabled = false;
+            } else {
+                nextButton.disabled = true;
+            }
+        } else {
+            nextButton.disabled = false; 
+        }
+
+        if (index === 4) { // Done step - hide navigation
+            document.getElementById('navigation-buttons').classList.add('hidden');
+        } else {
+            document.getElementById('navigation-buttons').classList.remove('hidden');
+        }
+
+        loadConfig(); 
+    }
+
+    function saveConfig() {
+        const config = {
+            recipient: recipientInput.value,
+            subject: subjectInput.value,
+            body: bodyInput.value,
+            attachmentIds: attachmentIdsInput.value
+        };
+        sessionStorage.setItem('emailConfig', JSON.stringify(config));
+    }
+
+    function loadConfig() {
+        const savedConfig = sessionStorage.getItem('emailConfig');
+        if (savedConfig) {
+            const config = JSON.parse(savedConfig);
+            recipientInput.value = config.recipient || '';
+            subjectInput.value = config.subject || 'Relatório Diário';
+            bodyInput.value = config.body || 'Olá! Este é o seu relatório diário. Tenha um ótimo dia!';
+            attachmentIdsInput.value = config.attachmentIds || '';
         }
     }
 
+    // Email Sending Logic
+    async function createAndSendEmails() {
+        sendSpinner.classList.remove('hidden');
+        createAndSendButton.disabled = true;
+        sendStatus.textContent = 'Processando...';
+
+        const recipients = recipientInput.value.split(',').map(e => e.trim()).filter(e => e);
+        const subject = subjectInput.value;
+        const body = bodyInput.value;
+        const attachmentIds = attachmentIdsInput.value.split(',').map(id => id.trim()).filter(id => id);
+        const numToProcess = parseInt(numDraftsToCreateSendInput.value);
+
+        if (recipients.length === 0) {
+            sendStatus.textContent = 'Erro: Por favor, insira pelo menos um destinatário.';
+            sendSpinner.classList.add('hidden');
+            createAndSendButton.disabled = false;
+            return;
+        }
+        if (!subject || !body) {
+            sendStatus.textContent = 'Erro: Assunto e Conteúdo do E-mail não podem estar vazios.';
+            sendSpinner.classList.add('hidden');
+            createAndSendButton.disabled = false;
+            return;
+        }
+        
+        // Ensure auth2 is initialized before proceeding with API calls
+        if (!auth2 || !auth2.isSignedIn.get()) {
+            sendStatus.textContent = 'Erro: Você não está conectado com sua conta Google. Por favor, conecte-se no Passo 2.';
+            sendSpinner.classList.add('hidden');
+            createAndSendButton.disabled = false;
+            return;
+        }
+
+
+        let attachmentsBlobs = [];
+        for (const id of attachmentIds) {
+            try {
+                const fileMetadata = await gapi.client.drive.files.get({
+                    fileId: id,
+                    fields: 'mimeType,name'
+                });
+                const mimeType = fileMetadata.result.mimeType;
+                const fileName = fileMetadata.result.name;
+
+                const fileContent = await gapi.client.drive.files.get({
+                    fileId: id,
+                    alt: 'media'
+                });
+                const data = btoa(String.fromCharCode.apply(null, new Uint8Array(fileContent.body.toArrayBuffer())));
+
+                attachmentsBlobs.push({
+                    mimeType: mimeType,
+                    filename: fileName,
+                    data: data
+                });
+                sendStatus.textContent = `Anexo '${fileName}' carregado.`;
+            } catch (error) {
+                console.error(`Erro ao carregar anexo com ID ${id}:`, error);
+                sendStatus.textContent = `Erro ao carregar anexo ${id}. Verifique o ID e as permissões no Google Drive.`;
+                sendSpinner.classList.add('hidden');
+                createAndSendButton.disabled = false;
+                return; 
+            }
+        }
+
+        let sentCount = 0;
+        for (let i = 0; i < numToProcess; i++) {
+            const finalSubject = `${subject} ${i + 1}`;
+            const rawEmail = createEmail(recipients.join(','), finalSubject, body, attachmentsBlobs);
+
+            try {
+                await gapi.client.gmail.users.messages.send({
+                    'userId': 'me',
+                    'resource': {
+                        'raw': base64urlEncode(rawEmail)
+                    }
+                });
+                sentCount++;
+                sendStatus.textContent = `Enviado: ${finalSubject} para ${recipients.join(', ')} (${sentCount}/${numToProcess})`;
+                await new Promise(resolve => setTimeout(resolve, 500)); 
+            } catch (error) {
+                console.error(`Erro ao enviar e-mail ${finalSubject}:`, error);
+                sendStatus.textContent = `Erro ao enviar e-mail: ${finalSubject}. Verifique o console para mais detalhes.`;
+                break; 
+            }
+        }
+
+        sendSpinner.classList.add('hidden');
+        createAndSendButton.disabled = false;
+        sendStatus.textContent = `Concluído! ${sentCount} e-mail(s) enviado(s).`;
+        if (sentCount < numToProcess) {
+            sendStatus.textContent += ` Houve erros em ${numToProcess - sentCount} e-mails.`;
+        }
+    }
+
+
+    // Event Listeners
     nextButton.addEventListener('click', () => {
         if (currentStep < steps.length - 1) {
             currentStep++;
@@ -390,51 +487,32 @@ function sendDailyDrafts() {
             showStep(currentStep);
         }
     });
-    
-    [recipientInput, subjectInput, bodyInput, draftsToCreateInput, draftsToSendInput, attachmentIdsInput].forEach(input => {
-        input.addEventListener('input', updateCode);
-    });
-    
-    copyButton.addEventListener('click', () => {
-        const codeToCopy = codeOutput.textContent;
-        // Use document.execCommand('copy') for better iframe compatibility
-        const textArea = document.createElement('textarea');
-        textArea.value = codeToCopy;
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        try {
-            document.execCommand('copy');
-            copyText.textContent = 'Copiado!';
-            setTimeout(() => {
-                copyText.textContent = 'Copiar Código';
-            }, 2000);
-        } catch (err) {
-            console.error('Falha ao copiar:', err);
-            // Fallback for actual clipboard API if it becomes available in iframe or if user is not in iframe
-            navigator.clipboard.writeText(codeToCopy).then(() => {
-                copyText.textContent = 'Copiado!';
-                setTimeout(() => {
-                    copyText.textContent = 'Copiar Código';
-                }, 2000);
-            }).catch(err => {
-                console.error('Falha no fallback de cópia:', err);
-            });
+
+    authorizeButton.addEventListener('click', handleAuthClick);
+    createAndSendButton.addEventListener('click', createAndSendEmails);
+    resetAppButton.addEventListener('click', () => {
+        sessionStorage.clear(); 
+        recipientInput.value = '';
+        subjectInput.value = 'Relatório Diário';
+        bodyInput.value = 'Olá! Este é o seu relatório diário. Tenha um ótimo dia!';
+        attachmentIdsInput.value = '';
+        numDraftsToCreateSendInput.value = 1;
+        sendStatus.textContent = '';
+        currentStep = 0;
+        showStep(currentStep);
+        if (auth2 && auth2.isSignedIn.get()) {
+            auth2.signOut();
         }
-        document.body.removeChild(textArea);
     });
 
+    // Save config on input change
+    [recipientInput, subjectInput, bodyInput, attachmentIdsInput].forEach(input => {
+        input.addEventListener('input', saveConfig);
+    });
 
-    // LLM Feature Logic - REMOVED: generateBodyButton, generateBodyModal, promptThemeInput, promptToneInput, cancelGenerateButton, confirmGenerateButton, generateSpinner
-
-    // Removed event listeners for LLM features.
-    // generateBodyButton.addEventListener('click', ...);
-    // cancelGenerateButton.addEventListener('click', ...);
-    // confirmGenerateButton.addEventListener('click', ...);
-
-
-    // Initial setup
-    showStep(currentStep);
+    // Initial load
+    window.onload = handleClientLoad;
+    showStep(currentStep); 
 </script>
 
 </body>
