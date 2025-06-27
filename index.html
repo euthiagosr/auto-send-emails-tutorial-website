@@ -6,8 +6,8 @@
     <title>Assistente para Automação de E-mails com Google Apps Script</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Chosen Palette: Warm Neutrals -->
-    <!-- Application Structure Plan: A multi-step wizard SPA. This structure breaks down the complex process of creating and deploying a script into small, manageable chunks, which is ideal for a non-technical audience. Key interactions include a dynamic code generator based on user input via a form, and simple visual diagrams to illustrate UI actions. This guided, step-by-step flow prevents users from feeling overwhelmed and reduces the chance of errors, as they never have to edit code directly. The addition of the LLM-powered content generator fits naturally within the code personalization step. Now includes handling for multiple recipients and multiple attachments based on user input. Placeholder images have been removed as requested. -->
-    <!-- Visualization & Content Choices: Report Info -> Tutorial Steps, Email Content Generation. Goal -> Guide a layperson through a technical process and provide AI-powered content creation. Viz/Presentation -> Interactive wizard with form-based code generation, CSS diagrams, and a modal/expanded section for LLM prompting. Interaction -> Next/Prev buttons, form inputs updating a code block, copy-to-clipboard button, and a new "Generate Email Content" button with a prompt input and loading state. Form inputs now support comma-separated values for multiple recipients and attachment IDs. Justification -> This is more user-friendly and error-proof than a static text document, and the AI integration significantly enhances the app's utility by automating content creation. The ability to add multiple recipients and attachments makes the tool much more versatile. Removed placeholder images as requested. Library/Method -> Vanilla JS for logic, Tailwind CSS for styling and diagrams, Gemini API for LLM calls. CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <!-- Application Structure Plan: A multi-step wizard SPA. This structure breaks down the complex process of creating and deploying a script into small, manageable chunks, which is ideal for a non-technical audience. Key interactions include a dynamic code generator based on user input via a form, and simple visual diagrams to illustrate UI actions. This guided, step-by-step flow prevents users from feeling overwhelmed and reduces the chance of errors, as they never have to edit code directly. Now includes handling for multiple recipients and multiple attachments based on user input. The AI content generation feature has been removed as requested. -->
+    <!-- Visualization & Content Choices: Report Info -> Tutorial Steps. Goal -> Guide a layperson through a technical process. Viz/Presentation -> Interactive wizard with form-based code generation and CSS diagrams. Interaction -> Next/Prev buttons, form inputs updating a code block, copy-to-clipboard button. Form inputs now support comma-separated values for multiple recipients and attachment IDs. Justification -> This is more user-friendly and error-proof than a static text document. The ability to add multiple recipients and attachments makes the tool much more versatile. Library/Method -> Vanilla JS for logic, Tailwind CSS for styling and diagrams. CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -99,9 +99,6 @@
                             <div>
                                 <label for="body" class="font-semibold text-slate-700">Conteúdo do E-mail</label>
                                 <textarea id="body" rows="4" class="w-full mt-1 p-2 border border-stone-300 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
-                                <button id="generate-body-button" class="mt-2 w-full bg-indigo-600 text-white font-bold py-2 px-4 rounded-md hover:bg-indigo-700 transition duration-300 flex items-center justify-center">
-                                    ✨ Gerar Conteúdo do E-mail
-                                </button>
                             </div>
                              <div class="grid grid-cols-2 gap-4">
                                 <div>
@@ -428,67 +425,12 @@ function sendDailyDrafts() {
     });
 
 
-    // LLM Feature Logic
-    generateBodyButton.addEventListener('click', () => {
-        generateBodyModal.classList.remove('hidden');
-    });
+    // LLM Feature Logic - REMOVED: generateBodyButton, generateBodyModal, promptThemeInput, promptToneInput, cancelGenerateButton, confirmGenerateButton, generateSpinner
 
-    cancelGenerateButton.addEventListener('click', () => {
-        generateBodyModal.classList.add('hidden');
-        promptThemeInput.value = '';
-        promptToneInput.value = '';
-    });
-
-    confirmGenerateButton.addEventListener('click', async () => {
-        const theme = promptThemeInput.value;
-        const tone = promptToneInput.value;
-
-        if (!theme) {
-            alert('Por favor, insira um tema para o e-mail.');
-            return;
-        }
-
-        generateSpinner.classList.remove('hidden');
-        confirmGenerateButton.disabled = true;
-
-        const prompt = `Gere o corpo de um e-mail com o tema "${theme}". O tom deve ser "${tone || 'neutro'}". Mantenha o conteúdo conciso e direto.`;
-        
-        let chatHistory = [];
-        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
-        const payload = { contents: chatHistory };
-        const apiKey = ""; // API key will be provided by the Canvas environment
-
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-
-        try {
-            const response = await fetch(apiUrl, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const result = await response.json();
-
-            if (result.candidates && result.candidates.length > 0 &&
-                result.candidates[0].content && result.candidates[0].content.parts &&
-                result.candidates[0].content.parts.length > 0) {
-                const generatedText = result.candidates[0].content.parts[0].text;
-                bodyInput.value = generatedText; // Populate the email body input
-                updateCode(); // Update the generated code block
-            } else {
-                console.error('Estrutura de resposta inesperada ou conteúdo ausente do LLM:', result);
-                alert('Não foi possível gerar o conteúdo do e-mail. Tente novamente.');
-            }
-        } catch (error) {
-            console.error('Erro ao chamar a API Gemini:', error);
-            alert('Ocorreu um erro ao gerar o conteúdo. Verifique sua conexão ou tente novamente mais tarde.');
-        } finally {
-            generateSpinner.classList.add('hidden');
-            confirmGenerateButton.disabled = false;
-            generateBodyModal.classList.add('hidden'); // Hide modal after generation
-            promptThemeInput.value = ''; // Clear prompt inputs
-            promptToneInput.value = '';
-        }
-    });
+    // Removed event listeners for LLM features.
+    // generateBodyButton.addEventListener('click', ...);
+    // cancelGenerateButton.addEventListener('click', ...);
+    // confirmGenerateButton.addEventListener('click', ...);
 
 
     // Initial setup
